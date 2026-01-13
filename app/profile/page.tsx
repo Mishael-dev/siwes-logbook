@@ -1,6 +1,7 @@
 "use client";
+
 import { signOut } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   User, 
   PenLine, 
@@ -8,31 +9,63 @@ import {
   Activity, 
   CalendarDays, 
   ChevronLeft,
-  LogOut
+  LogOut,
+  Loader2 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { getUserProfile, updateUserName } from "@/app/actions/profile"; 
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState("Alex Johnson");
   
-  // Mock data for progress
-  const weeksDone = 12;
-  const totalWeeks = 24;
+  // State for data
+  const [isLoading, setIsLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [name, setName] = useState("");
+  const [userImage, setUserImage] = useState<string | null>(null); 
+  const [weeksDone, setWeeksDone] = useState(0);
+  
+  const totalWeeks = 24; 
   const progressPercentage = (weeksDone / totalWeeks) * 100;
+
+  
+  useEffect(() => {
+    async function loadProfile() {
+      const data = await getUserProfile();
+      if (data) {
+        setName(data.name);
+        setWeeksDone(data.weeksDone);
+        setUserImage(data.image); // Save the image URL
+      }
+      setIsLoading(false);
+    }
+    loadProfile();
+  }, []);
+
+  // 2. Handle Name Update
+  const handleNameSave = async () => {
+    setIsEditing(false); 
+    await updateUserName(name); 
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center px-6 py-10 mt-8">
       <div className="w-full max-w-sm space-y-6">
         
-        {/* Top Navigation: Back Button */}
         <div className="w-full flex justify-start">
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={() => router.back()}
+            onClick={() => router.push('/')}
             className="-ml-2 text-text-secondary hover:text-foreground rounded-full"
           >
             <ChevronLeft className="w-6 h-6" />
@@ -40,16 +73,22 @@ export default function ProfilePage() {
         </div>
 
         {/* Profile Card */}
-        <div className="bg-surface-elevated bg-card rounded-2xl p-8 flex flex-col items-center  text-center space-y-6 ">
+        <div className="bg-surface-elevated bg-card rounded-2xl p-8 flex flex-col items-center text-center space-y-6 shadow-sm border border-border/40">
           
-          {/* Avatar */}
+          {/* Avatar Section (Updated) */}
           <div className="relative cursor-pointer">
-            <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center border-2 border-background ring-2 ring-primary/20">
-              <User className="w-10 h-10 text-primary" />
-            </div>
-            <div className="absolute bottom-0 right-0 bg-primary text-white rounded-full p-1.5 border-2 border-background shadow-sm">
-                <PenLine className="w-3 h-3" />
-            </div>
+            {userImage ? (
+              <img 
+                src={userImage} 
+                alt="Profile"
+                referrerPolicy="no-referrer" 
+                className="w-24 h-24 rounded-full object-cover border-2 border-background ring-2 ring-primary/20"
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center border-2 border-background ring-2 ring-primary/20">
+                <User className="w-10 h-10 text-primary" />
+              </div>
+            )}
           </div>
 
           {/* Editable Name */}
@@ -66,7 +105,7 @@ export default function ProfilePage() {
                 <Button
                   size="icon"
                   variant="ghost"
-                  onClick={() => setIsEditing(false)}
+                  onClick={handleNameSave}
                   className="h-10 w-10 text-green-600 hover:text-green-700 hover:bg-green-50"
                 >
                   <Check className="w-4 h-4" />
@@ -103,7 +142,7 @@ export default function ProfilePage() {
             <div className="h-2.5 w-full bg-background rounded-full overflow-hidden border border-border/50">
               <div 
                 className="h-full bg-primary transition-all duration-1000 ease-out rounded-full"
-                style={{ width: `${progressPercentage}%` }}
+                style={{ width: `${Math.min(progressPercentage, 100)}%` }}
               />
             </div>
             <p className="text-xs text-text-secondary text-right">
@@ -113,6 +152,7 @@ export default function ProfilePage() {
 
           {/* View Activity Button */}
           <Button 
+            onClick={() => router.push('/')}
             className="w-full h-12 rounded-xl font-medium flex items-center justify-center gap-2 mt-2"
           >
             <Activity className="w-4 h-4" />
@@ -120,17 +160,17 @@ export default function ProfilePage() {
           </Button>
 
         </div>
-        {/* Simple Logout Link */}
-      <Button
-      type="submit"
-      onClick={() => signOut({ redirectTo: "/" })}
-        variant="ghost"
-        size="sm"
-        className="h-8 px-3 text-text-secondary hover:text-destructive"
-      >
-        <LogOut className="w-4 h-4 mr-1.5" />
-        Sign out
-      </Button>
+        
+        {/* Sign Out Button */}
+        <Button
+          onClick={() => signOut({ redirectTo: "/" })}
+          variant="ghost"
+          size="sm"
+          className="h-8 px-3 text-text-secondary hover:text-destructive w-full"
+        >
+          <LogOut className="w-4 h-4 mr-1.5" />
+          Sign out
+        </Button>
       </div>
     </div>
   );
