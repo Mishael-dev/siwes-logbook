@@ -73,7 +73,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Profile Card */}
-        <div className="bg-surface-elevated bg-card rounded-2xl p-8 flex flex-col items-center text-center space-y-6 shadow-sm border border-border/40">
+        <div className="bg-surface-elevated bg-card rounded-2xl p-8 flex flex-col items-center text-center space-y-6">
           
           {/* Avatar Section (Updated) */}
           <div className="relative cursor-pointer">

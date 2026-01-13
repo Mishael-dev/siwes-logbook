@@ -97,10 +97,10 @@ export default function ActivitiesPage() {
                         <Clock className="w-3.5 h-3.5" />
                         <span>{week.entries.length} activit{week.entries.length !== 1 ? 'ies' : 'y'}</span>
                         {dateRange && (
-                          <>
+                          <div className="flex c">
                             <span>•</span>
                             <span>{dateRange}</span>
-                          </>
+                          </div>
                         )}
                       </div>
                     </div>

@@ -10,8 +10,6 @@ export default function Page() {
 
   const handleSignIn = async () => {
     setIsLoading(true);
-    // signIn returns a promise. Even though it redirects, 
-    // we set loading state to provide immediate feedback.
     await signIn("google", { redirectTo: "/" });
   };
 
