@@ -94,7 +94,7 @@ export default function ProfilePage() {
             className="w-full h-12 rounded-xl font-medium flex items-center justify-center gap-2 mt-2"
           >
             <Activity className="w-4 h-4" />
-            View Activity Log
+            View Activity
           </Button>
 
         </div>
