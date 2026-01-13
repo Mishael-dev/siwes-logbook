@@ -1,10 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { User, PenLine, Check, Activity, CalendarDays } from "lucide-react";
+import { 
+  User, 
+  PenLine, 
+  Check, 
+  Activity, 
+  CalendarDays, 
+  ChevronLeft 
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
+  const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState("Alex Johnson");
   
@@ -14,20 +23,31 @@ export default function ProfilePage() {
   const progressPercentage = (weeksDone / totalWeeks) * 100;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6">
+    <div className="min-h-screen bg-background flex flex-col items-center px-6 py-10 mt-8">
       <div className="w-full max-w-sm space-y-6">
         
+        {/* Top Navigation: Back Button */}
+        <div className="w-full flex justify-start">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => router.back()}
+            className="-ml-2 text-text-secondary hover:text-foreground rounded-full"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </Button>
+        </div>
+
         {/* Profile Card */}
-        <div className="bg-surface-elevated bg-card rounded-2xl p-8 shadow-lg border border-border/50 flex flex-col items-center text-center space-y-6">
+        <div className="bg-surface-elevated bg-card rounded-2xl p-8 flex flex-col items-center  text-center space-y-6 ">
           
           {/* Avatar */}
-          <div className="relative group cursor-pointer">
+          <div className="relative cursor-pointer">
             <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center border-2 border-background ring-2 ring-primary/20">
               <User className="w-10 h-10 text-primary" />
             </div>
-            {/* Optional: Camera icon overlay for avatar edit hint */}
-            <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-               <span className="text-white text-xs">Change</span>
+            <div className="absolute bottom-0 right-0 bg-primary text-white rounded-full p-1.5 border-2 border-background shadow-sm">
+                <PenLine className="w-3 h-3" />
             </div>
           </div>
 
@@ -52,17 +72,18 @@ export default function ProfilePage() {
                 </Button>
               </div>
             ) : (
-              <div className="flex items-center justify-center gap-2 group">
+              <div className="flex items-center justify-center gap-2">
                 <h2 className="text-2xl font-serif text-foreground">{name}</h2>
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="text-text-secondary hover:text-primary transition-colors opacity-0 group-hover:opacity-100"
+                  className="text-text-secondary/50 hover:text-primary transition-colors p-2"
+                  aria-label="Edit name"
                 >
                   <PenLine className="w-4 h-4" />
                 </button>
               </div>
             )}
-            <p className="text-sm text-text-secondary mt-1">Software Engineering Intern</p>
+            <p className="text-sm text-text-secondary mt-1">Intern</p>
           </div>
 
           {/* Progress Section */}
@@ -99,8 +120,8 @@ export default function ProfilePage() {
 
         </div>
 
-        {/* Simple Logout Link (Optional UX) */}
-        <button className="text-sm text-text-secondary hover:text-destructive transition-colors">
+        {/* Simple Logout Link */}
+        <button className="text-sm text-text-secondary hover:text-destructive transition-colors pb-4">
           Sign out
         </button>
       </div>
