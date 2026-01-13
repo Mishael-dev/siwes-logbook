@@ -3,7 +3,6 @@ import { useSession, signIn, signOut, getSession } from "next-auth/react";
 
 import { Button } from '@/components/ui/button';
 import { LogOut, User } from 'lucide-react';
-import Image from 'next/image';
 
 export function UserHeader(){
   const { data: session } = useSession();

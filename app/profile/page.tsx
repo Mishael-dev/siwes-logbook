@@ -1,5 +1,5 @@
 "use client";
-
+import { signOut } from "next-auth/react";
 import { useState } from "react";
 import { 
   User, 
@@ -7,7 +7,8 @@ import {
   Check, 
   Activity, 
   CalendarDays, 
-  ChevronLeft 
+  ChevronLeft,
+  LogOut
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
@@ -119,11 +120,17 @@ export default function ProfilePage() {
           </Button>
 
         </div>
-
         {/* Simple Logout Link */}
-        <button className="text-sm text-text-secondary hover:text-destructive transition-colors pb-4">
-          Sign out
-        </button>
+      <Button
+      type="submit"
+      onClick={() => signOut({ redirectTo: "/" })}
+        variant="ghost"
+        size="sm"
+        className="h-8 px-3 text-text-secondary hover:text-destructive"
+      >
+        <LogOut className="w-4 h-4 mr-1.5" />
+        Sign out
+      </Button>
       </div>
     </div>
   );

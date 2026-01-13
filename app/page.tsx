@@ -43,7 +43,7 @@ const Index = () => {
       {/* Weekend Notice */}
       {!workday && (
         <div className="mx-6 mb-4 p-4 bg-accent rounded-xl flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-accent-foreground flex-shrink-0 mt-0.5" />
+          <AlertCircle className="w-5 h-5 text-accent-foreground shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-medium text-accent-foreground">
               It's the weekend!
