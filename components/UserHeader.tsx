@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Button } from '@/components/ui/button';
 import { LogOut, User } from 'lucide-react';
 
-export function UserHeader(){
+export  function UserHeader(){
   const { data: session } = useSession();
   const user = session?.user;
 

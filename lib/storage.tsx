@@ -1,6 +1,7 @@
-import { startOfWeek, getWeek, format, parseISO, isMonday, isTuesday, isWednesday, isThursday, isFriday, getYear } from 'date-fns';
-
+import { startOfWeek, addDays, getWeek, format, parseISO, isMonday, isTuesday, isWednesday, isThursday, isFriday, getYear } from 'date-fns';
+import { getAllWeeks } from '@/app/actions/activity';
 export interface Activity {
+  id?: string;
   time: string;
   activity: string;
 }
@@ -13,19 +14,7 @@ export interface WeekEntry {
 
 const STORAGE_KEY = 'siwes-logger-data';
 
-export function getAllWeeks(): WeekEntry[] {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (!stored) return [];
-  try {
-    return JSON.parse(stored);
-  } catch {
-    return [];
-  }
-}
 
-export function saveAllWeeks(weeks: WeekEntry[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(weeks));
-}
 
 export function getCurrentWeekNumber(date: Date = new Date()): number {
   return getWeek(date, { weekStartsOn: 1 });
@@ -39,15 +28,15 @@ export function isWorkday(date: Date = new Date()): boolean {
   return isMonday(date) || isTuesday(date) || isWednesday(date) || isThursday(date) || isFriday(date);
 }
 
-export function getWeekEntry(weekNumber: number, year: number): WeekEntry | undefined {
-  const weeks = getAllWeeks();
+export async function getWeekEntry(weekNumber: number, year: number): Promise<WeekEntry | undefined> {
+  const weeks = await getAllWeeks();
   return weeks.find(w => w.week === weekNumber && w.year === year);
 }
 
-export function getTodayActivities(date: Date = new Date()): Activity[] {
+export async function getTodayActivities(date: Date = new Date()): Promise<Activity[]> {
   const weekNumber = getCurrentWeekNumber(date);
   const year = getCurrentYear(date);
-  const weekEntry = getWeekEntry(weekNumber, year);
+  const weekEntry = await getWeekEntry(weekNumber, year);
   
   if (!weekEntry) return [];
   
@@ -58,31 +47,7 @@ export function getTodayActivities(date: Date = new Date()): Activity[] {
   });
 }
 
-export function addActivity(activityText: string, date: Date = new Date()): Activity {
-  const weeks = getAllWeeks();
-  const weekNumber = getCurrentWeekNumber(date);
-  const year = getCurrentYear(date);
-  
-  const newActivity: Activity = {
-    time: date.toISOString(),
-    activity: activityText,
-  };
-  
-  const existingWeekIndex = weeks.findIndex(w => w.week === weekNumber && w.year === year);
-  
-  if (existingWeekIndex >= 0) {
-    weeks[existingWeekIndex].entries.push(newActivity);
-  } else {
-    weeks.push({
-      week: weekNumber,
-      year: year,
-      entries: [newActivity],
-    });
-  }
-  
-  saveAllWeeks(weeks);
-  return newActivity;
-}
+
 
 export function formatTime(isoString: string): string {
   const date = parseISO(isoString);
@@ -97,23 +62,17 @@ export function formatFullDate(date: Date = new Date()): string {
   return format(date, 'MMMM d, yyyy');
 }
 
-export function getWeekRange(weekNumber: number, year: number): string {
-  const weeks = getAllWeeks();
-  const weekEntry = weeks.find(w => w.week === weekNumber && w.year === year);
-  
-  if (!weekEntry || weekEntry.entries.length === 0) {
-    return '';
-  }
-  
-  const dates = weekEntry.entries.map(e => parseISO(e.time));
-  const minDate = new Date(Math.min(...dates.map(d => d.getTime())));
-  const maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
-  
-  return `${format(minDate, 'MMM d')} - ${format(maxDate, 'MMM d, yyyy')}`;
-}
+export function getWeekRangeSync(weekNumber: number, year: number): string {
+  // Get the first day of the year
+  const firstDayOfYear = new Date(year, 0, 1);
+  // Compute the start date of the week
+  const start = startOfWeek(addDays(firstDayOfYear, (weekNumber - 1) * 7), { weekStartsOn: 1 });
+  const end = addDays(start, 6);
 
-export function generateWeekSummaryPrompt(weekNumber: number, year: number): string {
-  const weekEntry = getWeekEntry(weekNumber, year);
+  return `${format(start, 'MMM d')} - ${format(end, 'MMM d, yyyy')}`;
+}
+export async function generateWeekSummaryPrompt(weekNumber: number, year: number): Promise<string> {
+  const weekEntry = await getWeekEntry(weekNumber, year);
   
   if (!weekEntry || weekEntry.entries.length === 0) {
     return 'No activities recorded for this week.';

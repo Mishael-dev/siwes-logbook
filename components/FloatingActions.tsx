@@ -15,7 +15,7 @@ export function FloatingActions({ onAddClick, onActivitiesClick, hasActivities }
           <Button
             onClick={onActivitiesClick}
             variant="secondary"
-            className="h-14 px-5 rounded-2xl shadow-lg font-semibold flex-shrink-0 transition-all active:scale-95"
+            className="h-14 px-5 rounded-2xl shadow-lg font-semibold shrink-0 transition-all active:scale-95"
           >
             <FolderOpen className="w-5 h-5 mr-2" />
             Activities

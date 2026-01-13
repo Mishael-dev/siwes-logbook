@@ -1,14 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Send } from 'lucide-react';
+import { X, Send, Loader2 } from 'lucide-react'; // Added Loader2
 import { Button } from '@/components/ui/button';
 
 interface AddActivityInputProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (activity: string) => void;
+  isSubmitting?: boolean; // Added new prop
 }
 
-export function AddActivityInput({ isOpen, onClose, onSubmit }: AddActivityInputProps) {
+export function AddActivityInput({ 
+  isOpen, 
+  onClose, 
+  onSubmit, 
+  isSubmitting = false // Default to false
+}: AddActivityInputProps) {
   const [value, setValue] = useState('');
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -19,10 +25,13 @@ export function AddActivityInput({ isOpen, onClose, onSubmit }: AddActivityInput
   }, [isOpen]);
 
   const handleSubmit = () => {
-    if (value.trim()) {
+    // Prevent submission if empty or already submitting
+    if (value.trim() && !isSubmitting) {
       onSubmit(value.trim());
       setValue('');
-      onClose();
+      // Note: You might want to remove onClose() here and let the 
+      // parent close the modal only after the API call succeeds.
+      onClose(); 
     }
   };
 
@@ -40,7 +49,7 @@ export function AddActivityInput({ isOpen, onClose, onSubmit }: AddActivityInput
       {/* Backdrop */}
       <div 
         className="fixed inset-0 bg-foreground/10 backdrop-blur-sm z-40"
-        onClick={onClose}
+        onClick={isSubmitting ? undefined : onClose} // Prevent closing while submitting
       />
       
       {/* Input Panel */}
@@ -59,6 +68,7 @@ export function AddActivityInput({ isOpen, onClose, onSubmit }: AddActivityInput
                 variant="ghost"
                 size="icon"
                 onClick={onClose}
+                disabled={isSubmitting} // Disable close button while loading
                 className="h-8 w-8 rounded-full"
               >
                 <X className="h-4 w-4" />
@@ -72,20 +82,25 @@ export function AddActivityInput({ isOpen, onClose, onSubmit }: AddActivityInput
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
                 onKeyDown={handleKeyDown}
+                disabled={isSubmitting} // Disable input while loading
                 placeholder="What did you work on?"
                 rows={3}
-                className="w-full bg-muted rounded-xl px-4 py-3 text-base text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                className="w-full bg-muted rounded-xl px-4 py-3 text-base text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all disabled:opacity-50"
               />
             </div>
             
             {/* Submit Button */}
             <Button
               onClick={handleSubmit}
-              disabled={!value.trim()}
-              className="w-full mt-4 h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all"
+              disabled={!value.trim() || isSubmitting}
+              className="w-full mt-4 h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all disabled:opacity-70"
             >
-              <Send className="w-4 h-4 mr-2" />
-              Save Activity
+              {isSubmitting ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4 mr-2" />
+              )}
+              {isSubmitting ? '' : 'Save Activity'}
             </Button>
           </div>
           

@@ -1,28 +1,34 @@
 "use client";
-
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getAllWeeks, getWeekRange, WeekEntry } from '@/lib/storage';
+import { getAllWeeks } from '@/app/actions/activity';
+import { getWeekRangeSync, WeekEntry } from '@/lib/storage';
 import { ChevronLeft, ChevronRight, Calendar, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { UserHeader } from '@/components/UserHeader';
+
 
 export default function ActivitiesPage() {
   const router = useRouter();
   const [weeks, setWeeks] = useState<WeekEntry[]>([]);
   const [hasMounted, setHasMounted] = useState(false);
 
-  // Load data from localStorage only after the component mounts in the browser
   useEffect(() => {
     setHasMounted(true);
-    const data = getAllWeeks().sort((a, b) => {
-      if (a.year !== b.year) return b.year - a.year;
-      return b.week - a.week;
-    });
-    setWeeks(data);
   }, []);
 
-  // Prevent "Hydration Mismatch" errors by not rendering until browser is ready
+  useEffect(() => {
+    async function fetchWeeks() {
+      try {
+        const data = await getAllWeeks();
+        setWeeks(data);
+      } catch (err) {
+        console.error("Failed to fetch weeks", err);
+      }
+    }
+    fetchWeeks();
+  }, []);
+
   if (!hasMounted) return null;
 
   return (
@@ -47,7 +53,6 @@ export default function ActivitiesPage() {
             </div>
           </div>
         </div>
-        {/* UserHeader can be used here even if it's an async server component */}
         <UserHeader />
       </header>
 
@@ -75,7 +80,7 @@ export default function ActivitiesPage() {
         ) : (
           <div className="space-y-3">
             {weeks.map((week, index) => {
-              const dateRange = getWeekRange(week.week, week.year);
+              const dateRange = getWeekRangeSync(week.week, week.year);
               return (
                 <button
                   key={`${week.year}-${week.week}`}
@@ -84,7 +89,7 @@ export default function ActivitiesPage() {
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                       <span className="text-lg font-semibold text-primary">
                         W{week.week}
                       </span>

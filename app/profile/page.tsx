@@ -18,15 +18,13 @@ import { getUserProfile, updateUserName } from "@/app/actions/profile";
 
 export default function ProfilePage() {
   const router = useRouter();
-  
-  // State for data
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState("");
   const [userImage, setUserImage] = useState<string | null>(null); 
   const [weeksDone, setWeeksDone] = useState(0);
   
-  const totalWeeks = 24; 
+  const totalWeeks = 26; 
   const progressPercentage = (weeksDone / totalWeeks) * 100;
 
   
@@ -36,14 +34,13 @@ export default function ProfilePage() {
       if (data) {
         setName(data.name);
         setWeeksDone(data.weeksDone);
-        setUserImage(data.image); // Save the image URL
+        setUserImage(data.image); 
       }
       setIsLoading(false);
     }
     loadProfile();
   }, []);
-
-  // 2. Handle Name Update
+  
   const handleNameSave = async () => {
     setIsEditing(false); 
     await updateUserName(name); 
