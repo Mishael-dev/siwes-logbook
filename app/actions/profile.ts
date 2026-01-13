@@ -1,13 +1,8 @@
 "use server";
 import { auth } from "@/auth";
-import { createClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
+import { supabase } from "@/lib/supabse";
 
-
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function getUserProfile() {
   const session = await auth();
