@@ -82,13 +82,27 @@ const Index = () => {
     loadActivities();
   }, [loadActivities]);
 
-  const handleAddActivity = async (activityText: string) => {
-    await addActivity(activityText, currentDate);
-    await loadActivities();
-    toast.success("Activity saved");
-  };
+const handleAddActivity = async (activityText: string) => {
+  const tempId = crypto.randomUUID();
 
-  // --- DELETE ---
+  const optimisticActivity: Activity = {
+    id: tempId,
+    activity: activityText,
+    time: new Date().toISOString(),
+  };
+  setActivities((prev) => [...prev, optimisticActivity]);
+  setIsInputOpen(false);
+  try {
+    const savedActivity = await addActivity(activityText, currentDate);
+    setActivities((prev) =>
+      prev.map((a) => (a.id === tempId ? savedActivity : a))
+    );
+    toast.success("Activity saved");
+  } catch (err) {
+    setActivities((prev) => prev.filter((a) => a.id !== tempId));
+    toast.error("Failed to save activity");
+  }
+};
   const openDeleteModal = (id: string) => {
     setDeleteId(id);
   };
