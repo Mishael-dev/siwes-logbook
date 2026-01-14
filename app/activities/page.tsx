@@ -1,17 +1,18 @@
 "use client";
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { getAllWeeks } from '@/app/actions/activity';
-import { getWeekRangeSync, WeekEntry } from '@/lib/storage';
-import { ChevronLeft, ChevronRight, Calendar, Clock } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { UserHeader } from '@/components/UserHeader';
 
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { getAllWeeks } from "@/app/actions/activity";
+import { getWeekRangeSync, WeekEntry } from "@/lib/storage";
+import { ChevronLeft, ChevronRight, Calendar, Clock, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { UserHeader } from "@/components/UserHeader";
 
 export default function ActivitiesPage() {
   const router = useRouter();
   const [weeks, setWeeks] = useState<WeekEntry[]>([]);
   const [hasMounted, setHasMounted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     setHasMounted(true);
@@ -20,16 +21,29 @@ export default function ActivitiesPage() {
   useEffect(() => {
     async function fetchWeeks() {
       try {
+        setIsLoading(true);
         const data = await getAllWeeks();
         setWeeks(data);
       } catch (err) {
         console.error("Failed to fetch weeks", err);
+      } finally {
+        setIsLoading(false);
       }
     }
+
     fetchWeeks();
   }, []);
 
   if (!hasMounted) return null;
+
+  // 🔄 Loader while fetching weeks
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-10 w-10 animate-spin text-black" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -40,7 +54,7 @@ export default function ActivitiesPage() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => router.push('/')}
+              onClick={() => router.push("/")}
               className="h-10 w-10 rounded-xl"
             >
               <ChevronLeft className="h-5 w-5" />
@@ -48,7 +62,7 @@ export default function ActivitiesPage() {
             <div>
               <h1 className="text-2xl font-serif text-foreground">Activities</h1>
               <p className="text-sm text-muted-foreground">
-                {weeks.length} week{weeks.length !== 1 ? 's' : ''} recorded
+                {weeks.length} week{weeks.length !== 1 ? "s" : ""} recorded
               </p>
             </div>
           </div>
@@ -70,7 +84,7 @@ export default function ActivitiesPage() {
               Start by adding activities on the home page
             </p>
             <Button
-              onClick={() => router.push('/')}
+              onClick={() => router.push("/")}
               className="mt-6"
               variant="outline"
             >
@@ -84,7 +98,9 @@ export default function ActivitiesPage() {
               return (
                 <button
                   key={`${week.year}-${week.week}`}
-                  onClick={() => router.push(`/activities/week/${week.year}/${week.week}`)}
+                  onClick={() =>
+                    router.push(`/activities/week/${week.year}/${week.week}`)
+                  }
                   className="w-full flex items-center justify-between group p-4 rounded-xl border border-transparent hover:border-border hover:bg-muted/50 transition-all animate-in fade-in"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
@@ -100,7 +116,10 @@ export default function ActivitiesPage() {
                       </h3>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground mt-0.5">
                         <Clock className="w-3.5 h-3.5" />
-                        <span>{week.entries.length} activit{week.entries.length !== 1 ? 'ies' : 'y'}</span>
+                        <span>
+                          {week.entries.length} activit
+                          {week.entries.length !== 1 ? "ies" : "y"}
+                        </span>
                         {dateRange && (
                           <>
                             <span>•</span>
