@@ -21,8 +21,8 @@ export default function WeekDetails() {
 
   const router = useRouter();
 
-  const weekNumber = parseInt(week || "0", 10);
-  const yearNumber = parseInt(year || "0", 10);
+  const weekNumber = parseInt(week ?? "0", 10);
+  const yearNumber = parseInt(year ?? "0", 10);
 
   useEffect(() => {
     setHasMounted(true);

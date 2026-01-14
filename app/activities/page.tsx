@@ -36,7 +36,7 @@ export default function ActivitiesPage() {
 
   if (!hasMounted) return null;
 
-  // 🔄 Loader while fetching weeks
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">

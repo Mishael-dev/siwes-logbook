@@ -51,11 +51,9 @@ const Index = () => {
   const [hasAnyActivities, setHasAnyActivities] = useState(false);
   const [currentDate] = useState(new Date());
   const workday = isWorkday(currentDate);
-
   const [isInputOpen, setIsInputOpen] = useState(false);
   const [isLoadingAction, setIsLoadingAction] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
-
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [editValue, setEditValue] = useState("");
@@ -138,6 +136,7 @@ const Index = () => {
     );
 
     try {
+      if (!editingActivity?.id || !editValue.trim()) return;
       await updateActivityAction(editingActivity.id, editValue);
       toast.success("Activity updated");
       setEditingActivity(null);
