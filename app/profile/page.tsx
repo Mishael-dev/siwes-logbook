@@ -40,7 +40,7 @@ export default function ProfilePage() {
     }
     loadProfile();
   }, []);
-  
+
   const handleNameSave = async () => {
     setIsEditing(false); 
     await updateUserName(name); 
