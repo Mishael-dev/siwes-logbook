@@ -49,7 +49,7 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
 
 export const { auth, handlers, signIn, signOut } = nextAuth({
   session: {
-    strategy: "database",
+    strategy: "jwt",
   },
 
   adapter: SupabaseAdapter({
