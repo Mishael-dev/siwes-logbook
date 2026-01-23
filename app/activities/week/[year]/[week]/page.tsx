@@ -10,9 +10,10 @@ import { Button } from "@/components/ui/button";
 import { UserHeader } from "@/components/UserHeader";
 import { format, parseISO } from "date-fns";
 
+import { WeekSummaryModal } from "@/components/WeekSummaryModal"; 
+
 export default function WeekDetails() {
   const { year, week } = useParams<{ year: string; week: string }>();
-
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [weekEntry, setWeekEntry] = useState<WeekEntry | null>(null);
   const [dateRange, setDateRange] = useState<string | null>(null);
@@ -20,7 +21,6 @@ export default function WeekDetails() {
   const [isLoading, setIsLoading] = useState(true);
 
   const router = useRouter();
-
   const weekNumber = parseInt(week ?? "0", 10);
   const yearNumber = parseInt(year ?? "0", 10);
 
@@ -64,7 +64,6 @@ export default function WeekDetails() {
 
   if (!hasMounted) return null;
 
-  // 🔄 Loading screen
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -75,7 +74,6 @@ export default function WeekDetails() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
       <header className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b border-border/50">
         <div className="px-6 py-4 flex items-center gap-3">
           <Button
@@ -98,7 +96,6 @@ export default function WeekDetails() {
         <UserHeader />
       </header>
 
-      {/* Activities */}
       <div className="flex-1 px-6 py-6 pb-32 overflow-y-auto scrollbar-hide">
         {!weekEntry || weekEntry.entries.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center py-12">
@@ -148,18 +145,27 @@ export default function WeekDetails() {
         )}
       </div>
 
-      {/* Generate Summary Button */}
       <div className="fixed bottom-6 left-0 right-0 z-30 px-6">
         <div className="max-w-md mx-auto">
           <Button
             onClick={() => setIsSummaryOpen(true)}
-            className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg shadow-primary/25 transition-all active:scale-95"
+            disabled={!weekEntry || weekEntry.entries.length === 0}
+            className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg shadow-primary/25 transition-all active:scale-95 disabled:opacity-50"
           >
             <Sparkles className="w-5 h-5 mr-2" />
             Generate Weekly Summary
           </Button>
         </div>
       </div>
+
+      {/* RENDER THE MODAL COMPONENT */}
+      <WeekSummaryModal 
+        isOpen={isSummaryOpen} 
+        onClose={() => setIsSummaryOpen(false)}
+        weekNumber={weekNumber}
+        year={yearNumber}
+      />
+
     </div>
   );
 }

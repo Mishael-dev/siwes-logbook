@@ -21,14 +21,14 @@ export async function getUserProfile() {
     return null;
   }
 
-  // 2. Calculate Weeks Done
+  // Calculate Weeks Done
   const { data: activities } = await supabase
-    .from("activities")
-    .select("week_number, year_number")
+    .from("siwes_logs")
+    .select("week, year")
     .eq("user_id", userId);
 
   const uniqueWeeks = new Set(
-    activities?.map((a) => `${a.year_number}-${a.week_number}`)
+    activities?.map((a) => `${a.year}-${a.week}`)
   );
   
   return {

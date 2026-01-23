@@ -72,9 +72,6 @@ export async function addActivity(activityText: string, date: Date = new Date())
   return data[0]; 
 }
 
-// @/app/actions/activity.ts
-
-// ... existing imports ...
 
 export async function deleteActivityAction(activityId: string) {
   const userId = await getUserId();
@@ -83,7 +80,7 @@ export async function deleteActivityAction(activityId: string) {
     .from('siwes_logs')
     .delete()
     .eq('id', activityId)
-    .eq('user_id', userId); // Security: ensure user owns the entry
+    .eq('user_id', userId); 
 
   if (error) throw new Error(error.message);
   return true;
@@ -111,7 +108,7 @@ export async function getWeekEntry(weekNumber: number, year: number): Promise<We
     .eq('week', weekNumber)
     .eq('year', year)
     .eq('user_id', userId)
-    .order('time', { ascending: true }); // optional, sort by time
+    .order('time', { ascending: true });
 
   if (error) {
     console.error('Failed to fetch week:', error);
