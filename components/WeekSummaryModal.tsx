@@ -18,28 +18,15 @@ type Tab = 'report' | 'prompt';
 
 export function WeekSummaryModal({ isOpen, onClose, weekNumber, year }: WeekSummaryModalProps) {
   const [activeTab, setActiveTab] = useState<Tab>('report');
-  
-  // Data States
   const [fullData, setFullData] = useState<SummaryResponse | null>(null);
-  
-  // ✅ FIX: Initialize displayedContent as empty string
   const [displayedContent, setDisplayedContent] = useState(''); 
-  
-  // UI States
   const [copied, setCopied] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // 1. Fetch & Validation Logic
   useEffect(() => {
     if (!isOpen) return;
-
-    // --- Validation (Friday / Cooldown / Limit) ---
     const today = new Date();
-    // Uncomment to enforce Friday only:
-    // if (today.getDay() !== 5) { toast.error("Fridays only!"); onClose(); return; }
-
     const lastGenTime = localStorage.getItem('last_generation_time');
     const now = Date.now();
     if (lastGenTime && now - parseInt(lastGenTime) < 60000) {
@@ -68,8 +55,8 @@ export function WeekSummaryModal({ isOpen, onClose, weekNumber, year }: WeekSumm
     // Reset States
     setIsLoading(true);
     setFullData(null);
-    setDisplayedContent(''); // Clear previous text
-    setIsTyping(false);      // Ensure typing stops
+    setDisplayedContent(''); 
+    setIsTyping(false);     
     setError(null);
     setActiveTab('report'); 
 
@@ -79,7 +66,6 @@ export function WeekSummaryModal({ isOpen, onClose, weekNumber, year }: WeekSumm
         setIsLoading(false);
         
         if (data.content) {
-          // ✅ Trigger typing only after data arrives
           setIsTyping(true);
         } else {
           setActiveTab('prompt');
@@ -93,28 +79,23 @@ export function WeekSummaryModal({ isOpen, onClose, weekNumber, year }: WeekSumm
   }, [isOpen, weekNumber, year, onClose]);
 
 
-  // 2. ✅ FIXED TYPING LOGIC
-  // This uses a recursive setTimeout which is safer than setInterval for React state updates
-  useEffect(() => {
-    // Only run if we are "typing", have data, and are on the report tab
+   useEffect(() => {
+   
     if (isTyping && fullData?.content && activeTab === 'report') {
       
-      // If we haven't shown all text yet
+     
       if (displayedContent.length < fullData.content.length) {
         
         const timeoutId = setTimeout(() => {
-          // Add 3 characters at a time (Adjust this number for speed: 1=slow, 10=fast)
           setDisplayedContent(fullData.content!.slice(0, displayedContent.length + 3));
-        }, 15); // Adjust delay (ms) here (10ms = fast, 50ms = slow)
+        }, 15); 
 
         return () => clearTimeout(timeoutId);
         
       } else {
-        // Finished typing
         setIsTyping(false); 
       }
     } 
-    // If user switches tabs, stop typing and show full text immediately
     else if (activeTab === 'prompt' && isTyping) {
       setIsTyping(false);
       setDisplayedContent(fullData?.content || '');
