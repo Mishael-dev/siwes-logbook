@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, Copy, Check, Sparkles, Loader2, AlertCircle, FileText, Terminal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { generateWeekSummary, type SummaryResponse } from '@/app/actions/summary';
+import { generateWeekSummary, type SummaryResponse } from '@/app/actions/summary'; 
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown'; 
 import { format } from 'date-fns';
@@ -21,7 +21,9 @@ export function WeekSummaryModal({ isOpen, onClose, weekNumber, year }: WeekSumm
   
   // Data States
   const [fullData, setFullData] = useState<SummaryResponse | null>(null);
-  const [displayedContent, setDisplayedContent] = useState(''); // For typing effect
+  
+  // ✅ FIX: Initialize displayedContent as empty string
+  const [displayedContent, setDisplayedContent] = useState(''); 
   
   // UI States
   const [copied, setCopied] = useState(false);
@@ -29,40 +31,45 @@ export function WeekSummaryModal({ isOpen, onClose, weekNumber, year }: WeekSumm
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const typingIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
+  // 1. Fetch & Validation Logic
   useEffect(() => {
     if (!isOpen) return;
+
+    // --- Validation (Friday / Cooldown / Limit) ---
     const today = new Date();
+    // Uncomment to enforce Friday only:
+    // if (today.getDay() !== 5) { toast.error("Fridays only!"); onClose(); return; }
+
     const lastGenTime = localStorage.getItem('last_generation_time');
     const now = Date.now();
     if (lastGenTime && now - parseInt(lastGenTime) < 60000) {
       const remaining = Math.ceil((60000 - (now - parseInt(lastGenTime))) / 1000);
-      toast.warning(`Please wait ${remaining}s before regenerating.`);
+      toast.warning(`Wait ${remaining}s before regenerating.`);
       onClose();
       return;
     }
 
-    
     const todayStr = format(today, 'yyyy-MM-dd');
     const storedDate = localStorage.getItem('generation_date');
     const storedCount = parseInt(localStorage.getItem('generation_count') || '0');
     let currentCount = (storedDate === todayStr) ? storedCount : 0;
 
     if (currentCount >= 3) {
-      toast.error("Daily limit reached! (3/3 used)");
+      toast.error("Daily limit (3) reached.");
       onClose();
       return;
     }
 
-    // --- START FETCH ---
+    // --- Update Storage & Start Fetch ---
     localStorage.setItem('last_generation_time', now.toString());
     localStorage.setItem('generation_date', todayStr);
     localStorage.setItem('generation_count', (currentCount + 1).toString());
 
+    // Reset States
     setIsLoading(true);
     setFullData(null);
-    setDisplayedContent('');
+    setDisplayedContent(''); // Clear previous text
+    setIsTyping(false);      // Ensure typing stops
     setError(null);
     setActiveTab('report'); 
 
@@ -70,10 +77,11 @@ export function WeekSummaryModal({ isOpen, onClose, weekNumber, year }: WeekSumm
       .then((data) => {
         setFullData(data);
         setIsLoading(false);
+        
         if (data.content) {
-          setIsTyping(true); 
+          // ✅ Trigger typing only after data arrives
+          setIsTyping(true);
         } else {
-          
           setActiveTab('prompt');
         }
       })
@@ -82,30 +90,37 @@ export function WeekSummaryModal({ isOpen, onClose, weekNumber, year }: WeekSumm
         setIsLoading(false);
       });
 
-    return () => {
-      if (typingIntervalRef.current) clearInterval(typingIntervalRef.current);
-    };
   }, [isOpen, weekNumber, year, onClose]);
 
+
+  // 2. ✅ FIXED TYPING LOGIC
+  // This uses a recursive setTimeout which is safer than setInterval for React state updates
   useEffect(() => {
+    // Only run if we are "typing", have data, and are on the report tab
     if (isTyping && fullData?.content && activeTab === 'report') {
-      let currentIndex = 0;
-      const content = fullData.content;
-      typingIntervalRef.current = setInterval(() => {
-        if (currentIndex < content.length) {
-          setDisplayedContent(content.slice(0, currentIndex + 5)); 
-        } else {
-          setDisplayedContent(content);
-          setIsTyping(false);
-          if (typingIntervalRef.current) clearInterval(typingIntervalRef.current);
-        }
-      }, 10);
-    } else if (activeTab === 'prompt') {
-      if (typingIntervalRef.current) clearInterval(typingIntervalRef.current);
+      
+      // If we haven't shown all text yet
+      if (displayedContent.length < fullData.content.length) {
+        
+        const timeoutId = setTimeout(() => {
+          // Add 3 characters at a time (Adjust this number for speed: 1=slow, 10=fast)
+          setDisplayedContent(fullData.content!.slice(0, displayedContent.length + 3));
+        }, 15); // Adjust delay (ms) here (10ms = fast, 50ms = slow)
+
+        return () => clearTimeout(timeoutId);
+        
+      } else {
+        // Finished typing
+        setIsTyping(false); 
+      }
+    } 
+    // If user switches tabs, stop typing and show full text immediately
+    else if (activeTab === 'prompt' && isTyping) {
       setIsTyping(false);
-      if (fullData?.content) setDisplayedContent(fullData.content);
+      setDisplayedContent(fullData?.content || '');
     }
-  }, [isTyping, fullData, activeTab]);
+  }, [displayedContent, isTyping, fullData, activeTab]);
+
 
   const handleCopy = async () => {
     try {
@@ -137,7 +152,9 @@ export function WeekSummaryModal({ isOpen, onClose, weekNumber, year }: WeekSumm
                 </div>
                 <div>
                   <h2 className="text-xl font-semibold text-foreground">Week {weekNumber} Report</h2>
-                  <p className="text-sm text-muted-foreground">AI Generator</p>
+                  <p className="text-sm text-muted-foreground">
+                    {isTyping ? "Synthesizing..." : "AI Generated Summary"}
+                  </p>
                 </div>
               </div>
               <Button variant="ghost" size="icon" onClick={onClose}>
@@ -174,13 +191,14 @@ export function WeekSummaryModal({ isOpen, onClose, weekNumber, year }: WeekSumm
             </div>
           </div>
           
-          {/* Scrollable Content Area */}
+          {/* Content Area */}
           <div className="flex-1 overflow-y-auto p-6 min-h-[200px]">
             <div className="bg-muted/30 rounded-xl p-4 min-h-full relative">
               
               {isLoading ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground gap-2">
                   <Loader2 className="w-6 h-6 animate-spin" />
+                  <span className="text-sm">Synthesizing...</span>
                 </div>
               ) : error ? (
                 <div className="flex flex-col items-center justify-center text-red-500 gap-2 h-full">
@@ -189,21 +207,20 @@ export function WeekSummaryModal({ isOpen, onClose, weekNumber, year }: WeekSumm
                 </div>
               ) : (
                 <>
-                  {/* TAB 1: RESULT */}
+                  {/* REPORT TAB */}
                   {activeTab === 'report' && (
                     <article className="prose prose-sm prose-neutral dark:prose-invert max-w-none">
-                      {fullData?.content ? (
-                        <>
-                          <ReactMarkdown>{displayedContent}</ReactMarkdown>
-                          {isTyping && <span className="inline-block w-2 h-4 ml-1 bg-blue-500 animate-pulse align-middle" />}
-                        </>
-                      ) : (
-                        <p className="text-muted-foreground italic">No result generated yet. Check the prompt tab.</p>
+                      {/* ReactMarkdown renders the sliced text */}
+                      <ReactMarkdown>{displayedContent}</ReactMarkdown>
+                      
+                      {/* Blinking Cursor */}
+                      {isTyping && (
+                        <span className="inline-block w-2 h-4 ml-1 bg-blue-500 animate-pulse align-middle" />
                       )}
                     </article>
                   )}
 
-                  {/* TAB 2: PROMPT */}
+                  {/* PROMPT TAB */}
                   {activeTab === 'prompt' && (
                     <div className="text-xs font-mono text-muted-foreground whitespace-pre-wrap break-words">
                       {fullData?.prompt}
